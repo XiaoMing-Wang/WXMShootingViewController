@@ -52,10 +52,15 @@
 }
 
 - (void)setImage:(UIImage *)image {
+    CGFloat scale = image.size.height / image.size.width * 1.0;
+    CGFloat width = [UIScreen mainScreen].bounds.size.width;
+    CGFloat height = width * scale;
+    
     self.imageView = [[UIImageView alloc] init];
-    self.imageView.frame = self.view.bounds;
+    self.imageView.frame = CGRectMake(0, 0, width, height);
     self.imageView.image = image;
-    [self.view addSubview:_imageView];
+    self.imageView.center = CGPointMake(width / 2, [UIScreen mainScreen].bounds.size.height / 2);
+    [self.view addSubview:self.imageView];
 }
 
 - (void)removeSubViews {

@@ -30,7 +30,6 @@
 @property (strong, nonatomic) AVCaptureMovieFileOutput *captureMovieFileOutput;
 /** 相机拍摄预览图层 */
 @property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
-
 /** 后台任务标示符 */
 @property (nonatomic, assign) UIBackgroundTaskIdentifier backgroundTaskIdentifier;
 /** 显示视频的内容 */
@@ -68,6 +67,8 @@
     [self.view addSubview:self.userCamera];
     [self.view addSubview:self.navigationBar];
     [self.view addSubview:self.toolBar];
+    
+    self.view.backgroundColor = [UIColor blackColor];
     [self addChildViewController:self.palyerVc];
     self.navigationController.navigationBar.hidden = YES;
     [self seingUserCamera];
@@ -119,7 +120,7 @@
         AVCaptureConnection *captureConnet = nil;
         captureConnet = [_captureMovieFileOutput connectionWithMediaType:AVMediaTypeVideo];
         if ([captureConnet isVideoStabilizationSupported]) {
-            captureConnet.preferredVideoStabilizationMode=AVCaptureVideoStabilizationModeAuto;
+            captureConnet.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
         }
     }
     
@@ -279,7 +280,11 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
 /** 用来显示录像内容 */
 - (UIView *)userCamera {
     if (!_userCamera) {
-        _userCamera = [[UIView alloc] initWithFrame:self.view.bounds];
+        CGFloat scale = 1920 / 1080.0;
+        CGFloat height = [UIScreen mainScreen].bounds.size.width * scale;
+        CGFloat top = ([UIScreen mainScreen].bounds.size.height - height) / 2.0;
+        CGRect rect = CGRectMake(0, top, [UIScreen mainScreen].bounds.size.width, height);
+        _userCamera = [[UIView alloc] initWithFrame:rect];
         _userCamera.backgroundColor = [UIColor blackColor];
     }
     return _userCamera;
@@ -306,7 +311,6 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
         _toolBar.delegate = self;
         _toolBar.supportLongTap = self.supportLongTap;
         _toolBar.backgroundColor = [UIColor clearColor];
-    /** _toolBar.backgroundColor = [UIColor redColor]; */
     }
     return _toolBar;
 }
