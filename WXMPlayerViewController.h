@@ -15,10 +15,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong) NSURL *url;
 @property (nonatomic, strong) UIImage *image;
-@property (nonatomic, strong) AVPlayerItem *playerItem;
-@property (nonatomic, strong) AVPlayer *player;
+@property (nonatomic, strong, nullable) AVPlayerItem *playerItem;
+@property (nonatomic, strong, nullable) AVPlayer *player;
 @property (nonatomic, strong) UIImageView *imageView;
 @property (nonatomic, strong) AVPlayerLayer *playerLayer;
+
+/** 是否全屏 */
+@property (nonatomic, assign) BOOL fullScreen;
 
 - (void)removeSubViews;
 @end

@@ -5,8 +5,8 @@
 //  Created by wq on 2019/12/29.
 //  Copyright © 2019 wxm. All rights reserved.
 //
+#import "WXMShootAssistant.h"
 #import "WXMShootingToolBar.h"
-#import "WXMShootingNavigationBar.h"
 #import "WXMPlayerViewController.h"
 #import "WXMShootingConfiguration.h"
 #import "WXMShootingViewController.h"
@@ -15,31 +15,41 @@
 <AVCaptureFileOutputRecordingDelegate,WXMShootingToolBarDelegate>
 
 /** 拍摄条 */
-@property (nonatomic, strong) WXMShootingNavigationBar *navigationBar;
 @property (nonatomic, strong) WXMShootingToolBar *toolBar;
 
 /** 播放VC */
 @property (nonatomic, strong) WXMPlayerViewController *palyerVc;
+
 /** 负责输入和输出设置之间的数据传递 */
 @property (strong, nonatomic) AVCaptureSession *captureSession;
+
 /** 负责从AVCaptureDevice获得输入数据 */
 @property (strong, nonatomic) AVCaptureDeviceInput *captureDeviceInput;
+
 /** 照片输出流 */
 @property (strong, nonatomic) AVCaptureStillImageOutput *captureStillImageOutput;
+
 /** 视频输出流 */
 @property (strong, nonatomic) AVCaptureMovieFileOutput *captureMovieFileOutput;
+
 /** 相机拍摄预览图层 */
 @property (strong, nonatomic) AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
+
 /** 后台任务标示符 */
 @property (nonatomic, assign) UIBackgroundTaskIdentifier backgroundTaskIdentifier;
+
 /** 显示视频的内容 */
 @property (nonatomic, strong) UIView *userCamera;
+
 /** 保存的Url */
 @property (nonatomic, strong) NSURL *localMovieUrl;
+
 /** 拍照的照片 */
 @property (nonatomic, strong) UIImage *image;
+
 /** 类型 */
 @property (nonatomic, assign) WXMShootingType actionType;
+
 /** 时间戳 */
 @property (nonatomic, strong) NSString *timeStemp;
 
@@ -49,6 +59,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [WXMShootAssistant createCacheFolder];
     [self initializationInterface];
 }
 
@@ -65,10 +76,9 @@
 /** 设置子控件 */
 - (void)initializationInterface {
     [self.view addSubview:self.userCamera];
-    [self.view addSubview:self.navigationBar];
     [self.view addSubview:self.toolBar];
-    
     self.view.backgroundColor = [UIColor blackColor];
+    
     [self addChildViewController:self.palyerVc];
     self.navigationController.navigationBar.hidden = YES;
     [self seingUserCamera];
@@ -171,7 +181,7 @@
 - (void)captureOutput:(AVCaptureFileOutput *)captureOutput
 didStartRecordingToOutputFileAtURL:(NSURL *)fileURL
       fromConnections:(NSArray *)connections {
-    /** NSLog(@"开始录制"); */
+    NSLog(@"开始录制");
 }
 
 - (void)captureOutput:(AVCaptureFileOutput *)captureOutput
@@ -230,10 +240,74 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
     if (self.actionType == WXMShootingTypePhoto) {
         [self takePhoto:playerViewController];
     } else {
-        NSLog(@"结束");
+        NSLog(@"222222222222");
         [self stopRecordVideo];
         playerViewController.url = self.localMovieUrl;
     }
+}
+
+/** 按钮回调
+@param toolBar 工具条
+@param responseType 回掉类型 */
+- (void)shootingAction:(WXMShootingToolBar *)toolBar
+          responseType:(WXMShootingResponseType)responseType {
+    
+    if (responseType == WXMShootingResponseTypeCancle) {
+        [self dismissViewControllerAnimated:YES completion:nil];
+    } else if (responseType == WXMShootingResponseTypeSure) {
+        
+        if (self.actionType == WXMShootingTypePhoto && self.image) {
+            
+            /** 压缩图片 */
+            [self compressedImage];
+            
+        } else if (self.actionType == WXMShootingTypeVideo ) {
+            
+            /** 压缩视频 */
+            NSLog(@"1111111111");
+            [self stopRecordVideo];
+            [self compressedVideo];
+            
+        } else {
+            [self dismissViewControllerAnimated:YES completion:nil];
+        }
+        
+    } else if (responseType == WXMShootingResponseTypeAgain) {
+        [self.captureSession startRunning];
+        [self.palyerVc removeSubViews];
+        [self.palyerVc.player pause];
+    }
+}
+
+/** 压缩图片 */
+- (void)compressedImage {
+    [WXMShootAssistant wc_showLoadingView:self.view];
+    UIImage *conversionImage = [WXMShootAssistant compressionImage:self.image];
+    if ([self.delegate respondsToSelector:@selector(wx_shootingVControllerWithImage:)]) {
+        [self.delegate wx_shootingVControllerWithImage:conversionImage];
+    }
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+/** 压缩视频 */
+- (void)compressedVideo {
+    NSString *originalPath = self.localMovieUrl.absoluteString;
+    NSString *outputFilePath = [NSString stringWithFormat:@"%@_cp.mp4", self.timeStemp];
+    NSString *newPath = [kShootVideoPath stringByAppendingPathComponent:outputFilePath];
+     
+    [WXMShootAssistant wc_showLoadingView:self.view];
+    [WXMShootAssistant compressedVideo:originalPath outString:newPath callback:^(BOOL success) {
+        if (success) {
+            if ([self.delegate respondsToSelector:@selector(wx_shootingVControllerWithVideo:)]) {
+                [self.delegate wx_shootingVControllerWithVideo:[NSURL fileURLWithPath:newPath]];
+                [self dismissViewControllerAnimated:YES completion:nil];
+                NSLog(@"%@",newPath);
+            } else {
+                [self dismissViewControllerAnimated:YES completion:nil];
+            }
+        }
+        [WXMShootAssistant wc_hiddenLoadingView:self.view];
+    }];
 }
 
 /**  准备录制视频 */
@@ -280,33 +354,21 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
 /** 用来显示录像内容 */
 - (UIView *)userCamera {
     if (!_userCamera) {
-        CGFloat scale = 1920 / 1080.0;
-        CGFloat height = [UIScreen mainScreen].bounds.size.width * scale;
-        CGFloat top = ([UIScreen mainScreen].bounds.size.height - height) / 2.0;
-        CGRect rect = CGRectMake(0, top, [UIScreen mainScreen].bounds.size.width, height);
+        CGRect rect = CGRectMake(0, (kSHeight - WXMVideoH) / 2, kSWidth, WXMVideoH);
+        if (self.fullScreen && WXMPhotoFullScreen) rect = self.view.bounds;
         _userCamera = [[UIView alloc] initWithFrame:rect];
         _userCamera.backgroundColor = [UIColor blackColor];
     }
     return _userCamera;
 }
 
-- (WXMShootingNavigationBar *)navigationBar {
-    if (!_navigationBar) {
-        CGFloat width = self.view.frame.size.width;
-        CGFloat top = kDevice_Is_iPhoneX ? 44 : 20;
-        CGRect rect = CGRectMake(0, top, width, WXMShootingNavigationH);
-        _navigationBar = [[WXMShootingNavigationBar alloc] initWithFrame:rect];
-    }
-    return _navigationBar;
-}
-
 /**  拍摄工具条 @return ShootingToolBar */
 - (WXMShootingToolBar *)toolBar {
     if (!_toolBar) {
-        CGFloat width = self.view.frame.size.width;
-        CGFloat height = [UIScreen mainScreen].bounds.size.height;
-        CGFloat top = height - WXMShootingToolH - kSafeDistance;
-        CGRect rect = CGRectMake(0, top, width, WXMShootingToolH);
+        CGFloat maxY = CGRectGetMaxY(self.userCamera.frame);
+        CGFloat y = maxY - WXMShootingToolH - 10;
+        if (maxY == kSHeight) y -= kSafeDistance;
+        CGRect rect = CGRectMake(0, y, kSWidth, WXMShootingToolH);
         _toolBar = [[WXMShootingToolBar alloc] initWithFrame:rect];
         _toolBar.delegate = self;
         _toolBar.supportLongTap = self.supportLongTap;
@@ -319,16 +381,18 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
 - (WXMPlayerViewController *)palyerVc {
     if (!_palyerVc) {
         _palyerVc = [[WXMPlayerViewController alloc] init];
+        _palyerVc.fullScreen = self.fullScreen;
     }
     return _palyerVc;
 }
 
 #pragma mark 设置视频保存地址
+#pragma mark 设置视频保存地址
 - (NSURL *)localMovieUrl {
     if (_localMovieUrl == nil) {
         _timeStemp = [NSString stringWithFormat:@"%zd", (long)[[NSDate date] timeIntervalSince1970]];
         NSString *outputFilePath = [NSString stringWithFormat:@"%@.mp4", _timeStemp];
-        outputFilePath = [kFriendShootVideoPath stringByAppendingPathComponent:outputFilePath];
+        outputFilePath = [kShootVideoPath stringByAppendingPathComponent:outputFilePath];
         _localMovieUrl = [NSURL fileURLWithPath:outputFilePath];
     }
     return _localMovieUrl;

@@ -19,21 +19,34 @@ NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES).f
 
 /** 缓存文件夹 */
 #define kFriendPath \
-[kLibraryboxPath stringByAppendingPathComponent:@"_FILE_CACHE_"]
+[kLibraryboxPath stringByAppendingPathComponent:@"WXMCaches"]
 
 /** 拍摄视频文件夹 */
-#define kFriendShootVideoPath \
-[kFriendPath stringByAppendingPathComponent:@"SHOOTVIDEO"]
+#define kShootVideoPath \
+[kFriendPath stringByAppendingPathComponent:@"Shootings"]
 
-#define kDevice_Is_iPhoneX \
+/** iphoneX */
+#define kIPhoneX \
 ({BOOL isPhoneX = NO;\
 if (@available(iOS 11.0, *)) {\
 isPhoneX = [[UIApplication sharedApplication] delegate].window.safeAreaInsets.bottom > 0.0;\
 }\
-(isPhoneX);})
+(isPhoneX);\
+})
 
 /** 底部安全距离 */
-#define kSafeDistance (kDevice_Is_iPhoneX ? 35 : 0)
+#define kSafeDistance (kIPhoneX ? 35 : 0)
+
+/** 视频是默认1920 / 1080输出 */
+#define WXMPhotoFullScreen NO
+
+/** 长宽比 */
+#define WXMAspect (1920.0 / 1080.0)
+#define WXMVideoH (kSWidth * WXMAspect)
+
+/** 屏幕宽高 */
+#define kSWidth [UIScreen mainScreen].bounds.size.width
+#define kSHeight [UIScreen mainScreen].bounds.size.height
 
 /** tool高度 */
 #define WXMShootingNavigationH 44

@@ -16,7 +16,7 @@
 @property (nonatomic, strong) UIButton *leftButton;
 @property (nonatomic, strong) UIButton *rightButton;
 @property (nonatomic, strong) UIButton *editorButton;
-
+@property (nonatomic, strong) UIButton *colseButton;
 @end
 
 @implementation WXMShootingToolBar
@@ -34,6 +34,7 @@
     CGFloat centerY = self.frame.size.height / 2;
     self.shootingButton.center = CGPointMake(centerX, centerY);
     
+    self.colseButton.frame = CGRectMake(0, 0, 28, 28);
     self.leftButton.frame = CGRectMake(0, 0, WXMPhotoCompleteWH, WXMPhotoCompleteWH);
     self.rightButton.frame = CGRectMake(0, 0, WXMPhotoCompleteWH, WXMPhotoCompleteWH);
     self.editorButton.frame = CGRectMake(0, 0, WXMPhotoCompleteWH, WXMPhotoCompleteWH);
@@ -41,11 +42,13 @@
     self.leftButton.center = CGPointMake(centerX, centerY);
     self.rightButton.center = CGPointMake(centerX, centerY);
     self.editorButton.center = CGPointMake(centerX, centerY);
+    self.colseButton.center = CGPointMake(centerX - 100, centerY);
     
     [self addSubview:self.shootingButton];
     [self addSubview:self.leftButton];
     [self addSubview:self.rightButton];
     [self addSubview:self.editorButton];
+    [self addSubview:self.colseButton];
 }
 
 /** 开始 */
@@ -71,10 +74,19 @@
     };
 }
 
-
 /** 点击事件 */
 - (void)clickEvent:(UIButton *)sender {
+    WXMShootingResponseType type = WXMShootingResponseTypeCancle;
+    if (sender == self.colseButton) type = WXMShootingResponseTypeCancle;
+    if (sender == self.rightButton) type = WXMShootingResponseTypeSure;
+    if (sender == self.leftButton) {
+        type = WXMShootingResponseTypeAgain;
+        [self completeWithAnimation:NO];
+    }
     
+    if ([self.delegate respondsToSelector:@selector(shootingAction:responseType:)]) {
+        [self.delegate shootingAction:self responseType:type];
+    }
 }
 
 /** 小中心录制，拍照按钮 @return ShootingButton */
@@ -86,6 +98,16 @@
         _shootingButton.shootingCallEnd = self.shootingCallEnd;
     }
     return _shootingButton;
+}
+
+/** 关闭按钮 */
+- (UIButton *)colseButton {
+    if (!_colseButton) {
+        _colseButton = [[UIButton alloc] init];
+        [_colseButton setImage:[UIImage imageNamed:@"icon_cancel"] forState:normal];
+        [_colseButton addTarget:self action:@selector(clickEvent:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _colseButton;
 }
 
 /** 左侧按钮 @return UIButton */
@@ -133,10 +155,12 @@
 
 /** 左侧和右侧按钮的动画效果 */
 - (void)completeWithAnimation:(BOOL)open {
+    _colseButton.hidden = open;
     _shootingButton.hidden = open;
     _editorButton.hidden = !open;
     _leftButton.hidden = !open;
     _rightButton.hidden = !open;
+    _shootingButton.enabled = !open;
     
     if (open) {
         [UIView animateWithDuration:0.4 animations:^{

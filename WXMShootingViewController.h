@@ -16,6 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** 是否支持长按 */
 @property (nonatomic, assign) BOOL supportLongTap;
 
+/** 是否全屏 */
+@property (nonatomic, assign) BOOL fullScreen;
+
 /** 协议回调 */
 @property (nonatomic, weak) id<WXMShootingProtocol> delegate;
 

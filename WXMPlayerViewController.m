@@ -6,6 +6,7 @@
 //  Copyright © 2019 wxm. All rights reserved.
 //
 #import "WXMPlayerViewController.h"
+#import "WXMShootingConfiguration.h"
 
 @implementation WXMPlayerViewController
 
@@ -31,10 +32,11 @@
 - (void)setUrl:(NSURL *)url {
 
     NSLog(@"%@",url);
+    
     /** 1、得到视频的URL */
     NSURL *movieURL = url;
-    /** 2、根据URL创建AVPlayerItem */
     
+    /** 2、根据URL创建AVPlayerItem */
     self.playerItem = [AVPlayerItem playerItemWithURL:movieURL];
     
     /** 3、把AVPlayerItem 提供给 AVPlayer */
@@ -46,27 +48,35 @@
     
     /** 设置边界显示方式 */
     _playerLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+    if (WXMPhotoFullScreen && self.fullScreen) {
+        _playerLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    }
     
     [self.view.layer insertSublayer:_playerLayer atIndex:0];
+    self.view.clipsToBounds = YES;
     [self.player play];
 }
 
 - (void)setImage:(UIImage *)image {
-    CGFloat scale = image.size.height / image.size.width * 1.0;
-    CGFloat width = [UIScreen mainScreen].bounds.size.width;
-    CGFloat height = width * scale;
-    
     self.imageView = [[UIImageView alloc] init];
-    self.imageView.frame = CGRectMake(0, 0, width, height);
+    self.imageView.frame = self.view.bounds;
     self.imageView.image = image;
-    self.imageView.center = CGPointMake(width / 2, [UIScreen mainScreen].bounds.size.height / 2);
+    self.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    if (WXMPhotoFullScreen && self.fullScreen) {
+        self.imageView.contentMode = UIViewContentModeScaleAspectFill;
+    }
+    self.imageView.clipsToBounds = YES;
     [self.view addSubview:self.imageView];
 }
 
 - (void)removeSubViews {
     [self.player pause];
     [self.imageView removeFromSuperview];
+    [self.player replaceCurrentItemWithPlayerItem:nil];
     [self.playerLayer removeFromSuperlayer];
+    
+    self.player = nil;
+    self.playerItem = nil;
     [self.view removeFromSuperview];
 }
 
