@@ -61,7 +61,7 @@
     self.imageView = [[UIImageView alloc] init];
     self.imageView.frame = self.view.bounds;
     self.imageView.image = image;
-    self.imageView.contentMode = UIViewContentModeScaleAspectFit;
+    self.imageView.contentMode = UIViewContentModeScaleAspectFill;
     if (WXMPhotoFullScreen && self.fullScreen) {
         self.imageView.contentMode = UIViewContentModeScaleAspectFill;
     }
