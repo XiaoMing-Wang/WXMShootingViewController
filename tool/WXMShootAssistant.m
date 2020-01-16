@@ -7,8 +7,8 @@
 //
 
 #import "WXMShootAssistant.h"
-#import "WXMVideoCompression.h"
-#import "WXMAVAssetExportSession.h"
+/** #import "WXMVideoCompression.h" */
+/** #import "WXMAVAssetExportSession.h" */
 #import "WXMShootingConfiguration.h"
 
 @implementation WXMShootAssistant
@@ -109,36 +109,36 @@
 /// @param inputString 输入路径
 /// @param outString 输出路径
 /// @param callback 回调
-+ (void)compressedVideo:(NSString *)inputString
-              outString:(NSString *)outString
-               callback:(void (^)(BOOL success))callback {
-    
-    WXMVideoCompression *compression = [[WXMVideoCompression alloc]init];
-    compression.inputURL = [NSURL URLWithString:inputString]; /**  视频输入路径 */
-    compression.exportURL = [NSURL fileURLWithPath:outString]; /**  视频输出路径 */
-    
-    WXMAudioConfigurations audioConfigurations;/**  音频压缩配置 */
-    audioConfigurations.samplerate = WXMAudioSampleRate_11025Hz; /**  采样率 */
-    audioConfigurations.bitrate = WXMAudioBitRate_32Kbps;/** / 音频的码率 */
-    audioConfigurations.numOfChannels = 1;/**  声道数 */
-    audioConfigurations.frameSize = 8; /**  采样深度 */
-    compression.audioConfigurations = audioConfigurations;
-    
-    WXMVideoConfigurations videoConfigurations;
-    videoConfigurations.fps = 25; /**  帧率 一秒中有多少帧 */
-    videoConfigurations.videoBitRate = WXM_VIDEO_BITRATE_HIGH; /**  视频质量 码率 */
-    videoConfigurations.videoResolution =  WXM_VIDEO_RESOLUTION_SUPER_HIGH; /** 视频尺寸 */
-    compression.videoConfigurations = videoConfigurations;
-    [compression startCompressionWithCompletionHandler:^(WXMVideoCompressionState State) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (State == WXM_VIDEO_STATE_FAILURE) {
-                NSLog(@"压缩失败");
-                if (callback) callback(NO);
-            } else {
-                NSLog(@"压缩成功");
-                if (callback) callback(YES);
-            }
-        });
-    }];
-}
+//+ (void)compressedVideo:(NSString *)inputString
+//              outString:(NSString *)outString
+//               callback:(void (^)(BOOL success))callback {
+//    
+//    WXMVideoCompression *compression = [[WXMVideoCompression alloc]init];
+//    compression.inputURL = [NSURL URLWithString:inputString]; /**  视频输入路径 */
+//    compression.exportURL = [NSURL fileURLWithPath:outString]; /**  视频输出路径 */
+//    
+//    WXMAudioConfigurations audioConfigurations;/**  音频压缩配置 */
+//    audioConfigurations.samplerate = WXMAudioSampleRate_11025Hz; /**  采样率 */
+//    audioConfigurations.bitrate = WXMAudioBitRate_32Kbps;/** / 音频的码率 */
+//    audioConfigurations.numOfChannels = 1;/**  声道数 */
+//    audioConfigurations.frameSize = 8; /**  采样深度 */
+//    compression.audioConfigurations = audioConfigurations;
+//    
+//    WXMVideoConfigurations videoConfigurations;
+//    videoConfigurations.fps = 25; /**  帧率 一秒中有多少帧 */
+//    videoConfigurations.videoBitRate = WXM_VIDEO_BITRATE_HIGH; /**  视频质量 码率 */
+//    videoConfigurations.videoResolution =  WXM_VIDEO_RESOLUTION_SUPER_HIGH; /** 视频尺寸 */
+//    compression.videoConfigurations = videoConfigurations;
+//    [compression startCompressionWithCompletionHandler:^(WXMVideoCompressionState State) {
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//            if (State == WXM_VIDEO_STATE_FAILURE) {
+//                NSLog(@"压缩失败");
+//                if (callback) callback(NO);
+//            } else {
+//                NSLog(@"压缩成功");
+//                if (callback) callback(YES);
+//            }
+//        });
+//    }];
+//}
 @end
